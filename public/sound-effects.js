@@ -366,9 +366,63 @@ window.SoundManager = (function() {
 
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     osc.start(now);
     osc.stop(now + 0.12);
+  }
+
+  // 11. Cash Frenzy Coin Clink (Crisp 1200Hz-1800Hz dual chime)
+  function playFrenzyCoin() {
+    if (!canPlay()) return;
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(1800, now + 0.05);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.07);
+  }
+
+  // 12. Golden Bull / Coin Sparkle
+  function playFrenzyGolden() {
+    if (!canPlay()) return;
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    [1046.5, 1318.5, 1567.98, 2093.0].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.03);
+      gain.gain.setValueAtTime(0.25, now + i * 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.03 + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.03);
+      osc.stop(now + i * 0.03 + 0.12);
+    });
+  }
+
+  // 13. Toxic Asset Shock / Zap
+  function playFrenzyToxic() {
+    if (!canPlay()) return;
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(60, now + 0.18);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
   }
 
   return {
@@ -385,6 +439,9 @@ window.SoundManager = (function() {
     playBombTick,
     playBombPass,
     playBombExplode,
-    playPanicPenalty
+    playPanicPenalty,
+    playFrenzyCoin,
+    playFrenzyGolden,
+    playFrenzyToxic
   };
 })();

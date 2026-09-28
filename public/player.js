@@ -66,9 +66,32 @@
   const bombResultDesc = document.getElementById('bomb-result-desc');
   const bombResultCash = document.getElementById('bomb-result-cash');
 
+  // DOM Elements - Cash Frenzy Mini-Game
+  const screenFrenzy = document.getElementById('screen-frenzy');
+  const frenzyCountdownOverlay = document.getElementById('frenzy-countdown-overlay');
+  const frenzyCountdownNum = document.getElementById('frenzy-countdown-num');
+  const frenzyTimerDigits = document.getElementById('frenzy-timer-digits');
+  const frenzyTimerFill = document.getElementById('frenzy-timer-fill');
+  const frenzyLiveCash = document.getElementById('frenzy-live-cash');
+  const frenzyTapSurface = document.getElementById('frenzy-tap-surface');
+  const frenzySpawnContainer = document.getElementById('frenzy-spawn-container');
+  const frenzyComboBadge = document.getElementById('frenzy-combo-badge');
+  const frenzyResultModal = document.getElementById('frenzy-result-modal');
+  const frenzyResDelta = document.getElementById('frenzy-res-delta');
+  const frenzyResTaps = document.getElementById('frenzy-res-taps');
+  const frenzyResNewCash = document.getElementById('frenzy-res-new-cash');
+
   let playerHasBomb = false;
   let bombTimerInterval = null;
   let bombLastTickMs = 0;
+
+  let frenzyActive = false;
+  let frenzyCashEarned = 0;
+  let frenzyTotalTaps = 0;
+  let frenzyComboCount = 0;
+  let frenzyFrozenUntil = 0;
+  let frenzyTimerInterval = null;
+  let frenzySpawnInterval = null;
 
   // DOM Elements - HUD & Drawer
   const playerHud = document.getElementById('player-hud');
@@ -257,7 +280,7 @@
   }
 
   function showScreen(screenEl) {
-    [screenJoin, screenLobby, screenDecision, screenSubmitted, screenResult, screenBomb, screenEndgame].forEach(s => {
+    [screenJoin, screenLobby, screenDecision, screenSubmitted, screenResult, screenBomb, screenFrenzy, screenEndgame].forEach(s => {
       if (s) s.classList.remove('active');
     });
     if (screenEl) screenEl.classList.add('active');
@@ -782,6 +805,290 @@
       if (bombResultCash) {
         bombResultCash.textContent = formatCash(data.liquidCash);
       }
+    }
+  });
+
+  // -------------------------------------------------------------
+  // CASH FRENZY / GREED GRAB MINI-GAME CLIENT LOGIC
+  // -------------------------------------------------------------
+
+  function startFrenzyMinigame(data) {
+    if (bombTimerInterval) clearInterval(bombTimerInterval);
+    if (frenzyTimerInterval) clearInterval(frenzyTimerInterval);
+    if (frenzySpawnInterval) clearInterval(frenzySpawnInterval);
+
+    showScreen(screenFrenzy);
+    frenzyActive = false;
+    frenzyCashEarned = 0;
+    frenzyTotalTaps = 0;
+    frenzyComboCount = 0;
+    frenzyFrozenUntil = 0;
+
+    if (frenzyLiveCash) frenzyLiveCash.textContent = '+$0';
+    if (frenzyTimerDigits) frenzyTimerDigits.textContent = '5.0s';
+    if (frenzyTimerFill) frenzyTimerFill.style.width = '100%';
+    if (frenzySpawnContainer) frenzySpawnContainer.innerHTML = '';
+    if (frenzyComboBadge) frenzyComboBadge.classList.add('hidden');
+    if (frenzyResultModal) frenzyResultModal.classList.add('hidden');
+
+    if (frenzyCountdownOverlay) {
+      frenzyCountdownOverlay.classList.remove('hidden');
+    }
+
+    if (window.SoundManager) window.SoundManager.playNewsAlert();
+
+    // 3-2-1 Countdown Timer
+    let readySec = 3;
+    if (frenzyCountdownNum) frenzyCountdownNum.textContent = '3';
+    
+    const countInterval = setInterval(() => {
+      readySec--;
+      if (readySec > 0) {
+        if (frenzyCountdownNum) frenzyCountdownNum.textContent = readySec;
+        if (window.SoundManager) window.SoundManager.playCountdownTick(readySec);
+      } else {
+        clearInterval(countInterval);
+        if (frenzyCountdownNum) frenzyCountdownNum.textContent = 'GO! 🔥';
+        if (window.SoundManager) window.SoundManager.playRoundReveal();
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+        setTimeout(() => {
+          if (frenzyCountdownOverlay) frenzyCountdownOverlay.classList.add('hidden');
+          activateFrenzyTapPhase(data.timerEnd || (Date.now() + 5000));
+        }, 400);
+      }
+    }, 1000);
+  }
+
+  function activateFrenzyTapPhase(endTimestamp) {
+    frenzyActive = true;
+    const totalDuration = 5000;
+
+    // Spawning Loop
+    frenzySpawnInterval = setInterval(() => {
+      if (!frenzyActive) return;
+      spawnFrenzyToken();
+    }, 320);
+
+    // Initial Burst of Tokens
+    for (let i = 0; i < 3; i++) {
+      setTimeout(spawnFrenzyToken, i * 120);
+    }
+
+    // Timer Loop
+    frenzyTimerInterval = setInterval(() => {
+      const now = Date.now() + serverClockOffset;
+      const remainingMs = Math.max(0, endTimestamp - now);
+      const remainingSec = (remainingMs / 1000).toFixed(1);
+
+      if (frenzyTimerDigits) {
+        frenzyTimerDigits.textContent = `${remainingSec}s`;
+        frenzyTimerDigits.style.color = remainingMs <= 1500 ? '#ef4444' : '#f59e0b';
+      }
+
+      if (frenzyTimerFill) {
+        const pct = (remainingMs / totalDuration) * 100;
+        frenzyTimerFill.style.width = `${pct}%`;
+      }
+
+      if (remainingMs <= 0) {
+        clearInterval(frenzyTimerInterval);
+        clearInterval(frenzySpawnInterval);
+        frenzyActive = false;
+
+        // Final Batch Sync to Server
+        socket.emit('player:frenzySync', {
+          roomCode: currentRoomCode,
+          playerId: currentPlayerId,
+          cashEarned: frenzyCashEarned,
+          totalTaps: frenzyTotalTaps
+        });
+      }
+    }, 50);
+  }
+
+  function spawnFrenzyToken() {
+    if (!frenzySpawnContainer) return;
+    const containerRect = frenzySpawnContainer.getBoundingClientRect();
+    if (!containerRect.width || !containerRect.height) return;
+
+    const token = document.createElement('div');
+    const rand = Math.random();
+    let type = 'cash';
+    let icon = '💵';
+    let className = 'cash-bill';
+
+    if (rand < 0.18) {
+      type = 'golden';
+      icon = '👑';
+      className = 'golden-bull';
+    } else if (rand > 0.82) {
+      type = 'toxic';
+      icon = '💀';
+      className = 'toxic-asset';
+    }
+
+    token.className = `frenzy-target-token ${className}`;
+    token.innerHTML = icon;
+    token.dataset.type = type;
+
+    const padding = 60;
+    const maxX = Math.max(20, containerRect.width - padding);
+    const maxY = Math.max(20, containerRect.height - padding);
+    const posX = Math.floor(Math.random() * maxX);
+    const posY = Math.floor(Math.random() * maxY);
+
+    token.style.left = `${posX}px`;
+    token.style.top = `${posY}px`;
+
+    const handleTokenTap = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!frenzyActive) return;
+      token.remove();
+      triggerFrenzyTapAction(type, e.clientX || posX, e.clientY || posY);
+    };
+
+    token.addEventListener('pointerdown', handleTokenTap);
+    token.addEventListener('click', handleTokenTap);
+
+    frenzySpawnContainer.appendChild(token);
+
+    setTimeout(() => {
+      if (token.parentNode) token.remove();
+    }, 2200);
+  }
+
+  function triggerFrenzyTapAction(type, clientX, clientY) {
+    if (!frenzyActive) return;
+    if (Date.now() < frenzyFrozenUntil) return;
+
+    frenzyTotalTaps++;
+    let delta = 1000;
+    let popClass = 'pop-gain';
+    let popText = '+$1,000';
+
+    if (type === 'golden') {
+      delta = 3000;
+      popClass = 'pop-golden';
+      popText = '+$3,000 👑';
+      frenzyComboCount += 2;
+      if (window.SoundManager) window.SoundManager.playFrenzyGolden();
+      if (navigator.vibrate) navigator.vibrate([60, 40, 80]);
+    } else if (type === 'toxic') {
+      delta = -2500;
+      popClass = 'pop-loss';
+      popText = '-$2,500 💀';
+      frenzyComboCount = 0;
+      frenzyFrozenUntil = Date.now() + 600; // 0.6s freeze
+      if (window.SoundManager) window.SoundManager.playFrenzyToxic();
+      if (navigator.vibrate) navigator.vibrate([200, 100]);
+      if (screenFrenzy) {
+        screenFrenzy.classList.add('frenzy-shock-wave');
+        setTimeout(() => screenFrenzy.classList.remove('frenzy-shock-wave'), 400);
+      }
+    } else {
+      delta = 1000;
+      frenzyComboCount++;
+      if (window.SoundManager) window.SoundManager.playFrenzyCoin();
+      if (navigator.vibrate) navigator.vibrate(25);
+    }
+
+    frenzyCashEarned += delta;
+
+    if (frenzyLiveCash) {
+      frenzyLiveCash.textContent = `${frenzyCashEarned >= 0 ? '+' : ''}$${frenzyCashEarned.toLocaleString()}`;
+      frenzyLiveCash.style.color = frenzyCashEarned >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    if (frenzyComboBadge) {
+      if (frenzyComboCount >= 8) {
+        frenzyComboBadge.classList.remove('hidden');
+        frenzyComboBadge.textContent = `🔥 ${frenzyComboCount}X COMBO!`;
+      } else {
+        frenzyComboBadge.classList.add('hidden');
+      }
+    }
+
+    // Spawn Floating Number Popup
+    createFrenzyPopNum(popText, popClass, clientX, clientY);
+
+    // Emit live tap to server
+    socket.emit('player:frenzyTap', {
+      roomCode: currentRoomCode,
+      playerId: currentPlayerId,
+      type
+    });
+  }
+
+  function createFrenzyPopNum(text, className, x, y) {
+    if (!screenFrenzy) return;
+    const pop = document.createElement('div');
+    pop.className = `frenzy-pop-num ${className}`;
+    pop.textContent = text;
+    
+    const rect = screenFrenzy.getBoundingClientRect();
+    const relX = (x || (rect.left + rect.width / 2)) - rect.left - 30;
+    const relY = (y || (rect.top + rect.height / 2)) - rect.top - 20;
+
+    pop.style.left = `${Math.max(10, relX)}px`;
+    pop.style.top = `${Math.max(10, relY)}px`;
+
+    screenFrenzy.appendChild(pop);
+
+    setTimeout(() => {
+      if (pop.parentNode) pop.remove();
+    }, 750);
+  }
+
+  if (frenzyTapSurface) {
+    frenzyTapSurface.addEventListener('pointerdown', (e) => {
+      // Tap on empty space acts as standard cash bill tap
+      if (e.target === frenzyTapSurface || e.target.closest('.frenzy-tap-pad-content')) {
+        triggerFrenzyTapAction('cash', e.clientX, e.clientY);
+      }
+    });
+  }
+
+  socket.on('player:frenzyStarted', (data) => {
+    startFrenzyMinigame(data);
+  });
+
+  socket.on('player:frenzyTapAck', (data) => {
+    if (data && data.totalEarned !== undefined) {
+      frenzyCashEarned = data.totalEarned;
+      if (frenzyLiveCash) {
+        frenzyLiveCash.textContent = `${frenzyCashEarned >= 0 ? '+' : ''}$${frenzyCashEarned.toLocaleString()}`;
+      }
+    }
+  });
+
+  socket.on('player:frenzyResolved', (data) => {
+    frenzyActive = false;
+    if (frenzyTimerInterval) clearInterval(frenzyTimerInterval);
+    if (frenzySpawnInterval) clearInterval(frenzySpawnInterval);
+
+    if (frenzyResultModal) {
+      frenzyResultModal.classList.remove('hidden');
+      const earned = data.cashEarned || 0;
+      if (frenzyResDelta) {
+        frenzyResDelta.textContent = `${earned >= 0 ? '+' : ''}$${earned.toLocaleString()}`;
+        frenzyResDelta.className = earned >= 0 ? 'frenzy-res-delta text-emerald' : 'frenzy-res-delta text-coral';
+      }
+      if (frenzyResTaps) frenzyResTaps.textContent = data.totalTaps || frenzyTotalTaps;
+      if (frenzyResNewCash) frenzyResNewCash.textContent = formatCash(data.newLiquidCash || liquidCash);
+
+      if (earned > 0) {
+        if (window.SoundManager) window.SoundManager.playCashUp();
+        if (window.ConfettiCelebration) window.ConfettiCelebration.fire({ particleCount: 80, duration: 2500 });
+      } else {
+        if (window.SoundManager) window.SoundManager.playCashDown();
+      }
+    }
+
+    if (data.newLiquidCash !== undefined) {
+      liquidCash = data.newLiquidCash;
+      updateHUD({ liquidCash });
     }
   });
 

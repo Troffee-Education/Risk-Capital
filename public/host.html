@@ -667,6 +667,99 @@
         </div>
       </section>
 
+      <!-- 6B. CASH FRENZY / GREED GRAB (5-SECOND RAPID TAP) HOST ARENA -->
+      <section id="view-frenzy" class="host-view">
+        <div class="frenzy-host-arena">
+          <!-- Top Cyber Bar -->
+          <header class="frenzy-host-header">
+            <div class="frenzy-alert-badge">
+              <span class="pulse-dot"></span>
+              <span class="frenzy-alert-heading">CASH FRENZY // RAPID LIQUIDITY INJECTION</span>
+              <span class="frenzy-strobe-icon">💸</span>
+            </div>
+
+            <div class="frenzy-host-clock-widget">
+              <span class="clock-prefix">FRENZY CLOSES IN:</span>
+              <span class="frenzy-host-clock-digits" id="frenzy-host-timer-digits">5.0</span>
+              <span class="clock-unit">SEC</span>
+              <div class="frenzy-host-progress-track">
+                <div id="frenzy-host-timer-bar" class="frenzy-host-progress-fill"></div>
+              </div>
+            </div>
+          </header>
+
+          <!-- Live Arena Stage: Collective Vault & Top Speed Tappers -->
+          <div class="frenzy-arena-main-stage">
+            
+            <!-- Left Center: Collective Room Cash Meter -->
+            <div class="frenzy-room-total-card">
+              <div class="frenzy-total-header">
+                <span class="frenzy-vault-icon">🏦</span>
+                <span class="frenzy-vault-title">TOTAL ROOM LIQUIDITY GRABBED</span>
+              </div>
+              <div class="frenzy-total-value text-emerald" id="frenzy-host-room-total">+$0</div>
+              <div class="frenzy-total-sub">ACROSS ALL LIVE TRADER SCREENS</div>
+            </div>
+
+            <!-- Right Center: Live Top Speed Tappers Leaderboard -->
+            <div class="frenzy-leaderboard-card">
+              <div class="frenzy-lead-header">
+                <span class="frenzy-lead-icon">⚡</span>
+                <span class="frenzy-lead-title">FASTEST TAPPERS</span>
+              </div>
+              <div class="frenzy-lead-list" id="frenzy-host-tappers-list">
+                <div class="lead-row-placeholder">Waiting for tap surge...</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Live Frenzy Drama Ticker -->
+          <footer class="frenzy-bottom-feed">
+            <div class="frenzy-feed-badge">
+              <span class="pulse-dot"></span>
+              <span>LIVE FRENZY FEED</span>
+            </div>
+            <div class="frenzy-feed-track">
+              <div id="frenzy-feed-content" class="ticker-marquee-inner">
+                <span class="ticker-item">⚡ 5-Second Cash Frenzy Active! Tap mobile screens furiously to grab liquidity!</span>
+              </div>
+            </div>
+          </footer>
+
+          <!-- Post-Frenzy Resolution Modal -->
+          <div id="frenzy-host-resolution-modal" class="frenzy-host-modal hidden">
+            <div class="frenzy-host-modal-card">
+              <div class="frenzy-modal-header">
+                <span class="frenzy-modal-emoji">👑</span>
+                <h1 class="frenzy-modal-title">CASH FRENZY COMPLETE!</h1>
+                <p class="frenzy-modal-sub">The liquidity window has closed! Here is the total wealth grabbed by the trading floor.</p>
+              </div>
+
+              <div class="frenzy-modal-stats-grid">
+                <div class="frenzy-mstat-box box-total-grabbed">
+                  <span class="mstat-lbl">TOTAL CASH INJECTED</span>
+                  <strong id="frenzy-host-res-total" class="mstat-val text-emerald">$0</strong>
+                  <span class="mstat-sub">Added to room net worth</span>
+                </div>
+                <div class="frenzy-mstat-box box-mvp-tapper">
+                  <span class="mstat-lbl">MVP SPEED TAPPER</span>
+                  <strong id="frenzy-host-res-mvp" class="mstat-val text-gold">Trader</strong>
+                  <span class="mstat-sub" id="frenzy-host-res-mvp-stats">0 taps</span>
+                </div>
+              </div>
+
+              <div class="frenzy-modal-actions">
+                <button id="btn-continue-after-frenzy" class="btn btn-arcade btn-huge">
+                  <span id="btn-continue-after-frenzy-text">CONTINUE TO NEXT ROUND 🚀</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       <!-- 7. END-OF-GAME SCREEN (AFTER FINAL ROUND OR EARLY TERMINATION) -->
       <section id="view-endgame" class="host-view">
         <div class="endgame-layout">

@@ -1879,6 +1879,194 @@ function resolveLiquidityBomb(roomCode) {
 }
 
 // -------------------------------------------------------------
+// CASH FRENZY / GREED GRAB (5-SECOND RAPID TAP) MINI-GAME ENGINE
+// -------------------------------------------------------------
+
+function startCashFrenzy(roomCode) {
+  const room = rooms.get(roomCode);
+  if (!room) return;
+
+  if (room.timerTimeoutId) {
+    clearTimeout(room.timerTimeoutId);
+    room.timerTimeoutId = null;
+  }
+
+  room.status = 'CASH_FRENZY';
+  const activePlayers = Array.from(room.players.values()).filter(p => p.isConnected !== false);
+  const totalPlayers = activePlayers.length > 0 ? activePlayers.length : room.players.size;
+
+  const readyMs = 3000;
+  const tapMs = 5000;
+  const totalMs = readyMs + tapMs;
+  const activeStart = Date.now() + readyMs;
+  const timerEnd = Date.now() + totalMs;
+
+  const playerStats = new Map();
+  for (const p of room.players.values()) {
+    playerStats.set(p.id, {
+      id: p.id,
+      nickname: p.nickname,
+      totalTaps: 0,
+      cashEarned: 0,
+      goldenHits: 0,
+      toxicHits: 0,
+      initialCash: p.liquidCash
+    });
+  }
+
+  room.frenzyState = {
+    active: true,
+    totalRoomCash: 0,
+    activeStart,
+    timerEnd,
+    durationSeconds: 5,
+    readySeconds: 3,
+    totalPlayers,
+    playerStats
+  };
+
+  // Broadcast to Host Display
+  io.to(`host:${roomCode}`).emit('host:frenzyStarted', {
+    activeStart,
+    timerEnd,
+    durationSeconds: 5,
+    readySeconds: 3,
+    totalPlayers,
+    roundIndex: room.roundIndex
+  });
+
+  // Broadcast to all players
+  for (const player of room.players.values()) {
+    io.to(`player:${player.id}`).emit('player:frenzyStarted', {
+      activeStart,
+      timerEnd,
+      durationSeconds: 5,
+      readySeconds: 3,
+      liquidCash: player.liquidCash
+    });
+  }
+
+  console.log(`[Cash Frenzy Started] Room ${roomCode}: 5-second rapid tap frenzy launched for ${totalPlayers} players.`);
+
+  room.timerTimeoutId = setTimeout(() => {
+    resolveCashFrenzy(roomCode);
+  }, totalMs + 500);
+}
+
+function handleFrenzyTap(roomCode, playerId, tapData) {
+  const room = rooms.get(roomCode);
+  if (!room || room.status !== 'CASH_FRENZY' || !room.frenzyState || !room.frenzyState.active) return;
+
+  const player = room.players.get(playerId);
+  if (!player) return;
+
+  const stats = room.frenzyState.playerStats.get(playerId);
+  if (!stats) return;
+
+  const type = (tapData && tapData.type) || 'cash';
+  let delta = 1000;
+  if (type === 'golden') {
+    delta = 3000;
+    stats.goldenHits++;
+  } else if (type === 'toxic') {
+    delta = -2500;
+    stats.toxicHits++;
+  }
+  stats.totalTaps++;
+  stats.cashEarned += delta;
+  room.frenzyState.totalRoomCash = Math.max(0, room.frenzyState.totalRoomCash + delta);
+
+  // Send real-time tap ack to player
+  io.to(`player:${playerId}`).emit('player:frenzyTapAck', {
+    type,
+    delta,
+    totalEarned: stats.cashEarned,
+    totalTaps: stats.totalTaps
+  });
+
+  // Send live update to host
+  const topTappers = Array.from(room.frenzyState.playerStats.values())
+    .sort((a, b) => b.cashEarned - a.cashEarned)
+    .slice(0, 5)
+    .map(p => ({ nickname: p.nickname, cashEarned: p.cashEarned, totalTaps: p.totalTaps }));
+
+  io.to(`host:${roomCode}`).emit('host:frenzyLiveUpdate', {
+    totalRoomCash: room.frenzyState.totalRoomCash,
+    topTappers,
+    recentEvent: type === 'golden' ? `👑 ${player.nickname} snagged a Golden Bull (+$3,000)!` : (type === 'toxic' ? `💀 ${player.nickname} hit a Toxic Debt Asset (-$2,500)!` : null)
+  });
+}
+
+function handleFrenzySync(roomCode, playerId, clientStats) {
+  const room = rooms.get(roomCode);
+  if (!room || !room.frenzyState) return;
+
+  const player = room.players.get(playerId);
+  if (!player) return;
+
+  const stats = room.frenzyState.playerStats.get(playerId);
+  if (!stats) return;
+
+  if (clientStats && typeof clientStats.cashEarned === 'number') {
+    const cappedEarned = Math.max(-15000, Math.min(50000, clientStats.cashEarned));
+    stats.cashEarned = cappedEarned;
+    if (clientStats.totalTaps) stats.totalTaps = clientStats.totalTaps;
+  }
+}
+
+function resolveCashFrenzy(roomCode) {
+  const room = rooms.get(roomCode);
+  if (!room || room.status !== 'CASH_FRENZY' || !room.frenzyState) return;
+
+  if (room.timerTimeoutId) {
+    clearTimeout(room.timerTimeoutId);
+    room.timerTimeoutId = null;
+  }
+
+  room.frenzyState.active = false;
+  room.status = 'FRENZY_RESOLVED';
+
+  let totalDisbursed = 0;
+  const playerRankings = [];
+
+  for (const player of room.players.values()) {
+    const stats = room.frenzyState.playerStats.get(player.id) || { cashEarned: 0, totalTaps: 0 };
+    const earned = stats.cashEarned || 0;
+    player.liquidCash = Math.max(0, player.liquidCash + earned);
+    player.netWorth = player.liquidCash;
+    totalDisbursed += Math.max(0, earned);
+
+    playerRankings.push({
+      id: player.id,
+      nickname: player.nickname,
+      cashEarned: earned,
+      totalTaps: stats.totalTaps || 0,
+      newLiquidCash: player.liquidCash
+    });
+
+    io.to(`player:${player.id}`).emit('player:frenzyResolved', {
+      cashEarned: earned,
+      totalTaps: stats.totalTaps || 0,
+      newLiquidCash: player.liquidCash
+    });
+  }
+
+  playerRankings.sort((a, b) => b.cashEarned - a.cashEarned);
+  const mvp = playerRankings.length > 0 ? playerRankings[0] : null;
+
+  const resultStats = {
+    totalRoomCash: totalDisbursed,
+    mvpTapper: mvp,
+    rankings: playerRankings.slice(0, 5),
+    nextRoundIndex: room.roundIndex + 1,
+    maxRounds: room.maxRounds || 10
+  };
+
+  io.to(`host:${roomCode}`).emit('host:frenzyResolved', resultStats);
+  console.log(`[Cash Frenzy Resolved] Room ${roomCode}: Disbursed ${formatCash(totalDisbursed)}. MVP: ${mvp ? mvp.nickname : 'None'} (${mvp ? formatCash(mvp.cashEarned) : 0}).`);
+}
+
+// -------------------------------------------------------------
 // GAME PHASES / LIFECYCLE
 // -------------------------------------------------------------
 
@@ -1895,6 +2083,13 @@ function advanceOrTriggerBomb(roomCode) {
     room.lastBombRound = room.roundIndex;
     console.log(`[Auto-Trigger Minigame] Launching Liquidity Bomb after Round ${room.roundIndex} for Room ${roomCode}!`);
     startLiquidityBomb(roomCode);
+    return;
+  }
+  // Auto-trigger Cash Frenzy (Greed Grab) after Round 5 (mid-game climax)
+  if (room.roundIndex === 5 && room.lastFrenzyRound !== room.roundIndex) {
+    room.lastFrenzyRound = room.roundIndex;
+    console.log(`[Auto-Trigger Minigame] Launching Cash Frenzy after Round ${room.roundIndex} for Room ${roomCode}!`);
+    startCashFrenzy(roomCode);
     return;
   }
   startMarketIntelPhase(roomCode);
@@ -2348,6 +2543,7 @@ io.on('connection', (socket) => {
     room.timerEnd = null;
     room.lastResolutionStats = null;
     room.lastBombRound = null;
+    room.lastFrenzyRound = null;
     room.finishedAt = null;
     const startCash = room.startingCapital || 100000;
     for (const p of room.players.values()) {
@@ -2789,6 +2985,51 @@ io.on('connection', (socket) => {
   });
 
   socket.on('host:continueAfterBomb', ({ roomCode, hostToken }, callback) => {
+    const code = (roomCode || '').toUpperCase().trim();
+    const room = rooms.get(code);
+    if (!room || room.hostToken !== hostToken) {
+      const resp = { success: false, error: 'Unauthorized or room not found' };
+      if (typeof callback === 'function') callback(resp);
+      return;
+    }
+    const maxRounds = room.mode === 'mode_1_sprint' ? (room.maxRounds || room.customScenarios?.rounds?.length || 10) : 15;
+    if (room.roundIndex >= maxRounds) {
+      finishGame(code);
+    } else {
+      startMarketIntelPhase(code);
+    }
+    if (typeof callback === 'function') callback({ success: true });
+  });
+
+  // -------------------------------------------------------------
+  // CASH FRENZY / GREED GRAB MINI-GAME SOCKET HANDLERS
+  // -------------------------------------------------------------
+
+  socket.on('player:frenzyTap', ({ roomCode, playerId, type }) => {
+    if (!roomCode || !playerId) return;
+    const code = roomCode.toUpperCase().trim();
+    handleFrenzyTap(code, playerId, { type });
+  });
+
+  socket.on('player:frenzySync', ({ roomCode, playerId, cashEarned, totalTaps }) => {
+    if (!roomCode || !playerId) return;
+    const code = roomCode.toUpperCase().trim();
+    handleFrenzySync(code, playerId, { cashEarned, totalTaps });
+  });
+
+  socket.on('host:startFrenzyMinigame', ({ roomCode, hostToken }, callback) => {
+    const code = (roomCode || '').toUpperCase().trim();
+    const room = rooms.get(code);
+    if (!room || room.hostToken !== hostToken) {
+      const resp = { success: false, error: 'Unauthorized or room not found' };
+      if (typeof callback === 'function') callback(resp);
+      return;
+    }
+    startCashFrenzy(code);
+    if (typeof callback === 'function') callback({ success: true });
+  });
+
+  socket.on('host:continueAfterFrenzy', ({ roomCode, hostToken }, callback) => {
     const code = (roomCode || '').toUpperCase().trim();
     const room = rooms.get(code);
     if (!room || room.hostToken !== hostToken) {

@@ -452,6 +452,69 @@
         </div>
       </section>
 
+      <!-- SCREEN 6B: CASH FRENZY / GREED GRAB (5-SECOND RAPID TAP) -->
+      <section id="screen-frenzy" class="player-screen">
+        <div class="frenzy-arena">
+          <!-- 3-2-1 Countdown Overlay -->
+          <div id="frenzy-countdown-overlay" class="frenzy-countdown-overlay">
+            <div class="frenzy-ready-tag">GET READY TO TAP!</div>
+            <div id="frenzy-countdown-num" class="frenzy-countdown-num">3</div>
+            <div class="frenzy-ready-sub">Grab Cash 💵 & Golden Bulls 👑 • Dodge Toxic Assets 💀</div>
+          </div>
+
+          <!-- Active Frenzy Header -->
+          <div class="frenzy-header">
+            <div class="frenzy-timer-box">
+              <span class="frenzy-timer-label">⏱️ TIME LEFT</span>
+              <strong id="frenzy-timer-digits" class="frenzy-timer-val text-gold">5.0s</strong>
+            </div>
+            <div class="frenzy-live-cash-box">
+              <span class="frenzy-cash-label">💰 GRABBED</span>
+              <strong id="frenzy-live-cash" class="frenzy-cash-val text-emerald">+$0</strong>
+            </div>
+          </div>
+
+          <div class="frenzy-timer-bar-track">
+            <div id="frenzy-timer-fill" class="frenzy-timer-fill"></div>
+          </div>
+
+          <!-- Interactive Full-Screen Tap & Token Spawning Canvas / Area -->
+          <div id="frenzy-tap-surface" class="frenzy-tap-surface">
+            <!-- Floating spawn container -->
+            <div id="frenzy-spawn-container" class="frenzy-spawn-container"></div>
+
+            <!-- Big tactile tap pad -->
+            <div class="frenzy-tap-pad-content">
+              <div class="frenzy-tap-ring">
+                <span class="frenzy-tap-icon">⚡</span>
+              </div>
+              <div class="frenzy-tap-instruction">TAP AS FAST AS YOU CAN!</div>
+              <div id="frenzy-combo-badge" class="frenzy-combo-badge hidden">🔥 0X COMBO!</div>
+            </div>
+          </div>
+
+          <!-- Resolution Modal -->
+          <div id="frenzy-result-modal" class="frenzy-result-modal hidden">
+            <div class="frenzy-res-card">
+              <div class="frenzy-res-icon">💸</div>
+              <h2 class="frenzy-res-title">FRENZY COMPLETE!</h2>
+              <div id="frenzy-res-delta" class="frenzy-res-delta text-emerald">+$0</div>
+              <p class="frenzy-res-desc">Capital successfully added to your liquid portfolio!</p>
+              <div class="frenzy-res-stats">
+                <div class="fres-stat">
+                  <span>TOTAL TAPS</span>
+                  <strong id="frenzy-res-taps">0</strong>
+                </div>
+                <div class="fres-stat">
+                  <span>NEW CASH</span>
+                  <strong id="frenzy-res-new-cash" class="text-gold">$0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- SCREEN 7: FINAL END-OF-GAME SCORECARD (SHAREABLE 9:16 CARD) -->
       <section id="screen-endgame" class="player-screen">
         <div class="endgame-share-wrapper">

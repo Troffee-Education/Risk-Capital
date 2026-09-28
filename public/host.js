@@ -26,6 +26,7 @@
   const viewRound = document.getElementById('view-round');
   const viewResolved = document.getElementById('view-resolved');
   const viewBomb = document.getElementById('view-bomb');
+  const viewFrenzy = document.getElementById('view-frenzy');
   const viewEndgame = document.getElementById('view-endgame');
 
   const btnCreateRoom = document.getElementById('btn-create-room');
@@ -54,6 +55,20 @@
   const btnContinueAfterBombText = document.getElementById('btn-continue-after-bomb-text');
   let bombArenaTimerInterval = null;
   let bombHostLastTickMs = 0;
+
+  // Cash Frenzy DOM Elements
+  const frenzyHostTimerDigits = document.getElementById('frenzy-host-timer-digits');
+  const frenzyHostTimerBar = document.getElementById('frenzy-host-timer-bar');
+  const frenzyHostRoomTotal = document.getElementById('frenzy-host-room-total');
+  const frenzyHostTappersList = document.getElementById('frenzy-host-tappers-list');
+  const frenzyFeedContent = document.getElementById('frenzy-feed-content');
+  const frenzyHostResolutionModal = document.getElementById('frenzy-host-resolution-modal');
+  const frenzyHostResTotal = document.getElementById('frenzy-host-res-total');
+  const frenzyHostResMvp = document.getElementById('frenzy-host-res-mvp');
+  const frenzyHostResMvpStats = document.getElementById('frenzy-host-res-mvp-stats');
+  const btnContinueAfterFrenzy = document.getElementById('btn-continue-after-frenzy');
+  const btnContinueAfterFrenzyText = document.getElementById('btn-continue-after-frenzy-text');
+  let frenzyArenaTimerInterval = null;
 
   // Custom Scenario Upload Elements
   const mode1ScenarioUploader = document.getElementById('mode1-scenario-uploader');
@@ -425,7 +440,7 @@
     // Toggle End Game Early Button visibility
     const btnEndGame = document.getElementById('btn-host-end-game');
     if (btnEndGame) {
-      const activePhases = ['view-lobby', 'view-intel', 'view-round', 'view-resolved', 'view-bomb'];
+      const activePhases = ['view-lobby', 'view-intel', 'view-round', 'view-resolved', 'view-bomb', 'view-frenzy'];
       if (activePhases.includes(viewId)) {
         btnEndGame.classList.remove('hidden');
       } else {
@@ -794,6 +809,127 @@
 
   socket.on('host:bombResolved', (data) => {
     renderBombDetonationResult(data);
+  });
+
+  // -------------------------------------------------------------
+  // CASH FRENZY / GREED GRAB (5-SECOND RAPID TAP) HOST HANDLERS
+  // -------------------------------------------------------------
+
+  function renderFrenzyArena(data) {
+    if (timerInterval) clearInterval(timerInterval);
+    if (bombArenaTimerInterval) clearInterval(bombArenaTimerInterval);
+    if (frenzyArenaTimerInterval) clearInterval(frenzyArenaTimerInterval);
+
+    currentStatus = 'CASH_FRENZY';
+    updateHeader('CASH FRENZY', currentRoomCode);
+
+    if (frenzyHostRoomTotal) frenzyHostRoomTotal.textContent = '+$0';
+    if (frenzyHostTappersList) frenzyHostTappersList.innerHTML = '<div class="lead-row-placeholder">Tap surge incoming...</div>';
+    if (frenzyHostResolutionModal) frenzyHostResolutionModal.classList.add('hidden');
+
+    if (frenzyFeedContent) {
+      frenzyFeedContent.innerHTML = `<span class="ticker-item">💸 Cash Frenzy Protocol Activated! 5-second rapid liquidity tap in progress!</span>`;
+    }
+
+    if (window.SoundManager) window.SoundManager.playNewsAlert();
+
+    const endTimestamp = data.timerEnd || (Date.now() + 8000);
+    const totalDuration = (data.durationSeconds || 5) * 1000;
+
+    const tick = () => {
+      const effectiveNow = Date.now() + serverClockOffset;
+      const remainingMs = Math.max(0, endTimestamp - effectiveNow);
+      const remainingSec = (remainingMs / 1000).toFixed(1);
+
+      if (frenzyHostTimerDigits) {
+        frenzyHostTimerDigits.textContent = remainingSec;
+        frenzyHostTimerDigits.style.color = remainingMs <= 1500 ? '#ef4444' : '#fbbf24';
+      }
+      if (frenzyHostTimerBar) {
+        const pct = (remainingMs / totalDuration) * 100;
+        frenzyHostTimerBar.style.width = `${Math.min(100, pct)}%`;
+      }
+
+      if (remainingMs <= 0) {
+        clearInterval(frenzyArenaTimerInterval);
+        frenzyArenaTimerInterval = null;
+        if (frenzyHostTimerDigits) frenzyHostTimerDigits.textContent = '0.0';
+      }
+    };
+
+    tick();
+    frenzyArenaTimerInterval = setInterval(tick, 50);
+
+    showView('view-frenzy');
+  }
+
+  function handleFrenzyLiveUpdate(data) {
+    if (frenzyHostRoomTotal && data.totalRoomCash !== undefined) {
+      frenzyHostRoomTotal.textContent = `+$${Number(data.totalRoomCash).toLocaleString()}`;
+    }
+
+    if (frenzyHostTappersList && data.topTappers && Array.isArray(data.topTappers)) {
+      frenzyHostTappersList.innerHTML = '';
+      data.topTappers.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'frenzy-tapper-row';
+        row.innerHTML = `
+          <div class="frenzy-tapper-left">
+            <div class="frenzy-tapper-rank">${idx === 0 ? '👑' : idx + 1}</div>
+            <div class="frenzy-tapper-name">${escapeHtml(p.nickname)}</div>
+          </div>
+          <div class="frenzy-tapper-stats">
+            <span class="frenzy-tapper-taps">${p.totalTaps || 0} taps</span>
+            <span class="frenzy-tapper-cash text-emerald">+$${(p.cashEarned || 0).toLocaleString()}</span>
+          </div>
+        `;
+        frenzyHostTappersList.appendChild(row);
+      });
+    }
+
+    if (data.recentEvent && frenzyFeedContent) {
+      const item = document.createElement('span');
+      item.className = 'ticker-item';
+      item.textContent = data.recentEvent;
+      frenzyFeedContent.prepend(item);
+    }
+  }
+
+  function renderFrenzyResolution(data) {
+    if (frenzyArenaTimerInterval) clearInterval(frenzyArenaTimerInterval);
+    if (window.SoundManager) window.SoundManager.playCashUp();
+    if (window.ConfettiCelebration) window.ConfettiCelebration.fire({ particleCount: 160, duration: 3500 });
+
+    if (frenzyHostResTotal) {
+      frenzyHostResTotal.textContent = `+$${Number(data.totalRoomCash || 0).toLocaleString()}`;
+    }
+
+    if (frenzyHostResMvp) {
+      frenzyHostResMvp.textContent = data.mvpTapper ? data.mvpTapper.nickname : 'Entire Trading Floor';
+    }
+    if (frenzyHostResMvpStats) {
+      frenzyHostResMvpStats.textContent = data.mvpTapper ? `${data.mvpTapper.totalTaps || 0} taps (+$${(data.mvpTapper.cashEarned || 0).toLocaleString()})` : '0 taps';
+    }
+
+    if (btnContinueAfterFrenzyText) {
+      btnContinueAfterFrenzyText.textContent = `CONTINUE TO ROUND ${data.nextRoundIndex || 1} 🚀`;
+    }
+
+    if (frenzyHostResolutionModal) {
+      frenzyHostResolutionModal.classList.remove('hidden');
+    }
+  }
+
+  socket.on('host:frenzyStarted', (data) => {
+    renderFrenzyArena(data);
+  });
+
+  socket.on('host:frenzyLiveUpdate', (data) => {
+    handleFrenzyLiveUpdate(data);
+  });
+
+  socket.on('host:frenzyResolved', (data) => {
+    renderFrenzyResolution(data);
   });
 
   // UI Helper Functions
@@ -1240,6 +1376,8 @@
         btnNextRoundText.textContent = 'VIEW FINAL RESULTS 🏆';
       } else if (data.roundIndex === 3 || data.roundIndex === 7) {
         btnNextRoundText.textContent = 'START LIQUIDITY BOMB 💣 (MINIGAME)';
+      } else if (data.roundIndex === 5) {
+        btnNextRoundText.textContent = 'START CASH FRENZY 💸 (MINIGAME)';
       } else {
         btnNextRoundText.textContent = `START ROUND ${data.roundIndex + 1} 🚀`;
       }
@@ -1867,6 +2005,16 @@
     btnContinueAfterBomb.addEventListener('click', () => {
       if (!currentRoomCode || !currentHostToken) return;
       socket.emit('host:continueAfterBomb', {
+        roomCode: currentRoomCode,
+        hostToken: currentHostToken
+      });
+    });
+  }
+
+  if (btnContinueAfterFrenzy) {
+    btnContinueAfterFrenzy.addEventListener('click', () => {
+      if (!currentRoomCode || !currentHostToken) return;
+      socket.emit('host:continueAfterFrenzy', {
         roomCode: currentRoomCode,
         hostToken: currentHostToken
       });
