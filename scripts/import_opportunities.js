@@ -103,11 +103,11 @@ for (let r = 1; r <= maxRounds; r++) {
 const finalConfig = {
   mode: 'mode_1_sprint',
   name: 'Quick Cash — Race to the Moon',
-  description: 'Fast-paced financial sprint. 40-second rounds. 3 Business deals per round. First trader to reach $500,000 wins!',
+  description: 'Fast-paced financial sprint. 80-second rounds. 3 Business deals per round. First trader to reach $500,000 wins!',
   startingCapital: 100000,
   targetCapital: 500000,
   maxRounds: 10,
-  timerSeconds: 40,
+  timerSeconds: 80,
   rounds: rounds,
   allOpportunities: items
 };

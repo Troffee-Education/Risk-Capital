@@ -937,70 +937,104 @@
   const moneySliderInput = document.getElementById('input-money-slider');
   const sliderPresetBtns = document.querySelectorAll('.btn-slider-preset');
 
-  if (moneySliderInput) {
-    moneySliderInput.addEventListener('input', (e) => {
-      sliderAllocationPct = Number(e.target.value) || 0;
-      sliderPresetBtns.forEach(btn => {
-        const pct = Number(btn.dataset.pct);
-        if (pct === sliderAllocationPct) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-      updateSliderMath();
+  let chosenAllocationPct = 100;
+
+  function updateAllocationDisplay() {
+    const allocPct = chosenAllocationPct;
+    const investedAmt = Math.round(liquidCash * (allocPct / 100));
+
+    // Update percentage chip active states
+    const pctBtns = document.querySelectorAll('.btn-pct-chip');
+    pctBtns.forEach(b => {
+      if (Number(b.dataset.pct) === allocPct) b.classList.add('active');
+      else b.classList.remove('active');
     });
+
+    // Update bottom bar
+    const bottomInvestedPct = document.getElementById('bottom-invested-pct');
+    if (bottomInvestedPct) bottomInvestedPct.textContent = `${allocPct}%`;
+
+    const bottomCashAmount = document.getElementById('bottom-cash-amount');
+    if (bottomCashAmount) bottomCashAmount.textContent = formatCash(investedAmt);
+
+    const btnLockText = document.getElementById('btn-lock-slider-text');
+    if (btnLockText) {
+      if (allocPct === 100) {
+        btnLockText.textContent = `🔥 ALL-IN: LOCK IN ${formatCash(investedAmt)}`;
+      } else {
+        btnLockText.textContent = `⚡ LOCK IN ${formatCash(investedAmt)} (${allocPct}%)`;
+      }
+    }
+
+    // Update outcome header on the current card
+    if (currentOpportunity) {
+      const opt = currentOpportunity;
+      const winPct = Number(opt.win !== undefined ? opt.win : 20);
+      const failPct = Number(opt.fail !== undefined ? opt.fail : -10);
+      const winDollar = Math.round(investedAmt * (winPct / 100));
+      const lossDollar = Math.round(investedAmt * (Math.abs(failPct) / 100));
+
+      const cardWinVal = document.querySelector('.qc-outcome-col.win-col .qc-outcome-val');
+      if (cardWinVal) {
+        cardWinVal.innerHTML = `+${formatCash(winDollar)} <span class="qc-outcome-pct">(+${winPct}%)</span>`;
+      }
+
+      const cardLossVal = document.querySelector('.qc-outcome-col.loss-col .qc-outcome-val');
+      if (cardLossVal) {
+        cardLossVal.innerHTML = `-${formatCash(lossDollar)} <span class="qc-outcome-pct">(${failPct}%)</span>`;
+      }
+    }
   }
 
-  sliderPresetBtns.forEach(btn => {
+  // Percentage bar button events
+  const pctButtons = document.querySelectorAll('.btn-pct-chip');
+  pctButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       if (window.SoundManager) window.SoundManager.playButtonTap();
-      sliderPresetBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      sliderAllocationPct = Number(btn.dataset.pct || 50);
-      if (moneySliderInput) moneySliderInput.value = sliderAllocationPct;
-      updateSliderMath();
+      chosenAllocationPct = Number(btn.dataset.pct || 100);
+      updateAllocationDisplay();
     });
   });
 
   // Setup Order Lock-in Submission
   const btnLockSliderOrder = document.getElementById('btn-lock-slider-order');
-  if (btnLockSliderOrder) {
-    const handleOrderSubmission = (e) => {
-      if (e) e.preventDefault();
-      if (selectedOptionId) return;
-      if (liquidCash <= 0) return;
+  const handleOrderSubmission = (e) => {
+    if (e) e.preventDefault();
+    if (selectedOptionId) return;
+    if (liquidCash <= 0) return;
 
-      if (navigator.vibrate) navigator.vibrate(30);
-      if (window.SoundManager) window.SoundManager.playButtonTap();
+    if (navigator.vibrate) navigator.vibrate(30);
+    if (window.SoundManager) window.SoundManager.playButtonTap();
 
-      const allocPct = sliderAllocationPct;
-      const investedAmt = Math.round(liquidCash * (allocPct / 100));
-      const oppId = currentOpportunity?.id || 'opportunity';
+    const allocPct = chosenAllocationPct;
+    const investedAmt = Math.round(liquidCash * (allocPct / 100));
+    const oppId = currentOpportunity?.id || 'opportunity';
 
-      selectedOptionId = oppId;
-      btnLockSliderOrder.disabled = true;
+    selectedOptionId = oppId;
+    if (btnLockSliderOrder) btnLockSliderOrder.disabled = true;
 
-      socket.emit('player:submitChoice', {
-        roomCode: currentRoomCode,
-        playerId: playerUUID,
-        optionId: oppId,
-        allocationPct: allocPct,
-        amount: investedAmt
-      }, (res) => {
-        if (res && res.success) {
-          if (lockedChoiceName) lockedChoiceName.textContent = currentOpportunity?.name || 'Investment Deal';
-          if (lockedChoiceAmount) {
-            lockedChoiceAmount.textContent = allocPct === 0
-              ? 'Kept 100% in Bank ($0 Risked)'
-              : `Allocated: ${formatCash(investedAmt)} (${allocPct}%)`;
-          }
-          showScreen(screenSubmitted);
-        } else {
-          selectedOptionId = null;
-          btnLockSliderOrder.disabled = false;
-          console.warn('[Submission Error]', res?.error);
+    socket.emit('player:submitChoice', {
+      roomCode: currentRoomCode,
+      playerId: playerUUID,
+      optionId: oppId,
+      allocationPct: allocPct,
+      amount: investedAmt
+    }, (res) => {
+      if (res && res.success) {
+        if (lockedChoiceName) lockedChoiceName.textContent = currentOpportunity?.name || 'Investment Deal';
+        if (lockedChoiceAmount) {
+          lockedChoiceAmount.textContent = `Allocated: ${formatCash(investedAmt)} (${allocPct}%)`;
         }
-      });
-    };
+        showScreen(screenSubmitted);
+      } else {
+        selectedOptionId = null;
+        if (btnLockSliderOrder) btnLockSliderOrder.disabled = false;
+        console.warn('[Submission Error]', res?.error);
+      }
+    });
+  };
 
+  if (btnLockSliderOrder) {
     btnLockSliderOrder.addEventListener('click', handleOrderSubmission);
     btnLockSliderOrder.addEventListener('touchend', (e) => {
       handleOrderSubmission(e);
@@ -1009,7 +1043,7 @@
 
   let activeDealIndex = 0;
   let cachedOptions = [];
-  let currentLiveTimerSec = 40;
+  let currentLiveTimerSec = 80;
 
   // Single Card Carousel Renderer
   function renderSingleCard(idx) {
@@ -1034,6 +1068,12 @@
     });
 
     const opt = currentOpportunity;
+    const winPct = Number(opt.win !== undefined ? opt.win : 20);
+    const failPct = Number(opt.fail !== undefined ? opt.fail : -10);
+    const investedAmt = Math.round(liquidCash * (chosenAllocationPct / 100));
+    const winDollar = Math.round(investedAmt * (winPct / 100));
+    const lossDollar = Math.round(investedAmt * (Math.abs(failPct) / 100));
+
     const riskScore = Number(opt.riskScore) >= 1 ? Number(opt.riskScore) : (opt.riskTier === 'High Risk' ? 8 : opt.riskTier === 'Medium Risk' ? 5 : 2);
     let riskClass = 'risk-high';
     let riskLabelText = 'HIGH';
@@ -1047,7 +1087,6 @@
     }
 
     const spriteSvg = window.PixelSprites ? window.PixelSprites.getSpriteSvg(riskSpriteName, 22) : '⚡';
-
     const cardImg = (opt.imageUrl && opt.imageUrl.trim()) ? opt.imageUrl.trim() : 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600';
 
     if (cardsContainer) {
@@ -1067,6 +1106,25 @@
         <div class="qc-badge-circle top-left">${spriteSvg}</div>
         <div class="qc-badge-circle top-right-timer">
           <span class="qc-badge-text-timer card-timer-digits">${currentLiveTimerSec}s</span>
+        </div>
+
+        <!-- TOP MONEY OUTCOME BANNER (Clear Win / Lose Amounts) -->
+        <div class="qc-outcome-header-bar">
+          <div class="qc-outcome-col win-col">
+            <span class="qc-outcome-icon">🟢</span>
+            <div class="qc-outcome-text-group">
+              <span class="qc-outcome-label lbl-win">WIN GET:</span>
+              <strong class="qc-outcome-val text-emerald">+${formatCash(winDollar)} <span class="qc-outcome-pct">(+${winPct}%)</span></strong>
+            </div>
+          </div>
+          <div class="qc-outcome-divider"></div>
+          <div class="qc-outcome-col loss-col">
+            <span class="qc-outcome-icon">🔴</span>
+            <div class="qc-outcome-text-group">
+              <span class="qc-outcome-label lbl-loss">FAIL LOSE:</span>
+              <strong class="qc-outcome-val text-coral">-${formatCash(lossDollar)} <span class="qc-outcome-pct">(${failPct}%)</span></strong>
+            </div>
+          </div>
         </div>
 
         <!-- Title Ribbon Banner -->
@@ -1093,11 +1151,29 @@
         </div>
         <div class="qc-badge-circle bottom-right">
           <span class="qc-badge-sublabel">RETURN</span>
-          <span class="qc-badge-text-return">+${opt.win}% / ${opt.fail}%</span>
+          <span class="qc-badge-text-return">+${winPct}% / ${failPct}%</span>
         </div>
       `;
 
+      // Tap on card to submit directly
+      cardEl.addEventListener('click', (e) => {
+        handleOrderSubmission(e);
+      });
+
       cardsContainer.appendChild(cardEl);
+    }
+
+    // Update Bottom Action Bar
+    const bottomCashAmount = document.getElementById('bottom-cash-amount');
+    if (bottomCashAmount) {
+      bottomCashAmount.textContent = formatCash(liquidCash);
+    }
+    const btnLockText = document.getElementById('btn-lock-slider-text');
+    if (btnLockText) {
+      btnLockText.textContent = `⚡ LOCK IN ${escapeHtml(opt.name)}`;
+    }
+    if (btnLockSliderOrder) {
+      btnLockSliderOrder.disabled = liquidCash <= 0 || !!selectedOptionId;
     }
 
     updateSliderMath();
@@ -1106,22 +1182,18 @@
   // Decision UI & Countdown
   function renderDecisionScreen(options, endTimestamp, roundIndex, businessData) {
     if (decisionRoundTag) {
-      decisionRoundTag.textContent = `ROUND ${roundIndex || 1} • 40S SPRINT`;
+      decisionRoundTag.textContent = `ROUND ${roundIndex || 1} • 80S SPRINT`;
     }
 
     selectedOptionId = null;
-    sliderAllocationPct = 50;
+    chosenAllocationPct = 100;
 
     const btnLock = document.getElementById('btn-lock-slider-order');
     if (btnLock) {
       btnLock.disabled = false;
     }
 
-    if (moneySliderInput) moneySliderInput.value = 50;
-    sliderPresetBtns.forEach(b => {
-      if (b.dataset.pct === '50') b.classList.add('active');
-      else b.classList.remove('active');
-    });
+    updateAllocationDisplay();
 
     cachedOptions = (options && options.length > 0) ? options : [
       {
@@ -1239,7 +1311,7 @@
       }, { passive: true });
     }
 
-    const duration = 40000;
+    const duration = 80000;
     startPlayerTimer(endTimestamp, duration);
     showScreen(screenDecision);
   }
@@ -1247,7 +1319,7 @@
   function startPlayerTimer(endTimestamp, totalDurationMs) {
     if (timerInterval) clearInterval(timerInterval);
 
-    const totalDuration = totalDurationMs || 40000;
+    const totalDuration = totalDurationMs || 80000;
     let lastTickSec = null;
     const timerWrapper = document.getElementById('decision-timer-wrapper');
 

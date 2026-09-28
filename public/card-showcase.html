@@ -207,6 +207,25 @@
             </div>
           </div>
 
+          <!-- TOP MONEY OUTCOME BANNER -->
+          <div class="qc-outcome-header-bar">
+            <div class="qc-outcome-col win-col">
+              <span class="qc-outcome-icon">🟢</span>
+              <div class="qc-outcome-text-group">
+                <span class="qc-outcome-label lbl-win">WIN GET:</span>
+                <strong class="qc-outcome-val text-emerald">+${card.returnValue.split('/')[0].trim()}</strong>
+              </div>
+            </div>
+            <div class="qc-outcome-divider"></div>
+            <div class="qc-outcome-col loss-col">
+              <span class="qc-outcome-icon">🔴</span>
+              <div class="qc-outcome-text-group">
+                <span class="qc-outcome-label lbl-loss">FAIL LOSE:</span>
+                <strong class="qc-outcome-val text-coral">${card.returnValue.split('/')[1] ? card.returnValue.split('/')[1].trim() : '-5%'}</strong>
+              </div>
+            </div>
+          </div>
+
           <!-- Center Art Frame -->
           <div class="qc-art-frame">
             <img src="${card.imageUrl}" alt="${card.businessName}" class="pixelated" />

@@ -496,7 +496,7 @@
       activeRoundLabel.textContent = `ROUND ${data.roundIndex}`;
       renderRoundOptions(data.roundOptions);
       updateSubmissionProgress(data.submittedCount, data.playerCount);
-      const totalDur = currentMode === 'mode_1_sprint' ? 15000 : 25000;
+      const totalDur = currentMode === 'mode_1_sprint' ? 80000 : 25000;
       if (data.timerEnd) {
         startTimerCountdown(data.timerEnd, totalDur, roundTimerDigits, roundTimerBar);
       }
@@ -605,7 +605,7 @@
       renderHostMoonTracks(data.standings);
     }
 
-    const durationMs = data.durationSeconds ? data.durationSeconds * 1000 : (currentMode === 'mode_1_sprint' ? 40000 : 25000);
+    const durationMs = data.durationSeconds ? data.durationSeconds * 1000 : (currentMode === 'mode_1_sprint' ? 80000 : 25000);
     startTimerCountdown(data.endTimestamp, durationMs, roundTimerDigits, roundTimerBar);
   });
 
@@ -1232,6 +1232,16 @@
 
       if (data.top3.length === 0) {
         resolutionPodium.innerHTML = '<div class="feed-placeholder">No investor records available.</div>';
+      }
+    }
+
+    if (btnNextRoundText) {
+      if (data.isGameOver) {
+        btnNextRoundText.textContent = 'VIEW FINAL RESULTS 🏆';
+      } else if (data.roundIndex === 3 || data.roundIndex === 7) {
+        btnNextRoundText.textContent = 'START LIQUIDITY BOMB 💣 (MINIGAME)';
+      } else {
+        btnNextRoundText.textContent = `START ROUND ${data.roundIndex + 1} 🚀`;
       }
     }
   }

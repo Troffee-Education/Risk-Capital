@@ -32,14 +32,11 @@
         </div>
       </div>
       
-      <!-- Mode 1 Sprint Goal Progress Bar -->
+      <!-- Mode 1 Sprint Net Worth HUD Display -->
       <div id="hud-sprint-container" class="hud-sprint-container">
         <div class="hud-sprint-meta">
-          <span class="hud-sprint-label">🎯 SPRINT TO $500K</span>
+          <span class="hud-sprint-label">🏆 NET WORTH</span>
           <span id="hud-sprint-cash-text" class="hud-sprint-cash text-emerald">$100,000</span>
-        </div>
-        <div class="hud-sprint-track">
-          <div id="hud-sprint-bar" class="hud-sprint-bar" style="width: 20%;"></div>
         </div>
       </div>
 
@@ -247,8 +244,8 @@
           <!-- Chunky Segmented Countdown Gauge -->
           <div class="decision-timer-bar">
             <div class="timer-info">
-              <span class="timer-tag" id="decision-round-tag">ROUND 1 • 40S SPRINT</span>
-              <span class="timer-num" id="decision-timer-wrapper"><strong id="decision-seconds" class="text-gold">40</strong>s</span>
+              <span class="timer-tag" id="decision-round-tag">ROUND 1 • 80S SPRINT</span>
+              <span class="timer-num" id="decision-timer-wrapper"><strong id="decision-seconds" class="text-gold">80</strong>s</span>
             </div>
             <div class="timer-track">
               <div id="decision-progress-fill" class="timer-fill"></div>
@@ -296,81 +293,26 @@
             </div>
           </div>
 
-          <!-- Interactive Cash Allocation Slider (0% – 100%) -->
-          <div id="slider-allocation-card" class="slider-allocation-card">
-            <div class="slider-header-row">
-              <span class="slider-card-tag">💰 HOW MUCH MONEY WILL YOU INVEST?</span>
-              <span class="slider-live-pct" id="slider-pct-label">50%</span>
+          <!-- Small Sleek Investment Percentage Bar -->
+          <div class="percentage-selector-bar" id="percentage-selector-bar">
+            <span class="pct-bar-label">INVEST:</span>
+            <div class="pct-btn-group" id="pct-btn-group">
+              <button type="button" class="btn-pct-chip" data-pct="25">25%</button>
+              <button type="button" class="btn-pct-chip" data-pct="50">50%</button>
+              <button type="button" class="btn-pct-chip" data-pct="75">75%</button>
+              <button type="button" class="btn-pct-chip active" data-pct="100">🔥 100% (ALL-IN)</button>
             </div>
+          </div>
 
-            <!-- Live Dollar Split Display -->
-            <div class="slider-cash-split-grid">
-              <div class="split-box split-invested">
-                <span class="split-label">INVESTING IN DEAL:</span>
-                <strong class="split-val text-emerald" id="slider-invested-val">$50,000</strong>
-                <span class="split-sub" id="slider-invested-sub">(50% of your funds)</span>
-              </div>
-              <div class="split-box split-reserve">
-                <span class="split-label">SAFE IN BANK:</span>
-                <strong class="split-val text-gold" id="slider-reserve-val">$50,000</strong>
-                <span class="split-sub" id="slider-reserve-sub">(50% kept safe)</span>
-              </div>
+          <!-- Simple Compact Bottom Action Bar (Replaces bulky slider) -->
+          <div id="simple-bottom-action-bar" class="simple-bottom-action-bar">
+            <div class="bottom-cash-pill">
+              <span class="bottom-cash-label">INVESTING (<span id="bottom-invested-pct">100%</span>)</span>
+              <strong id="bottom-cash-amount" class="bottom-cash-val text-emerald">$100,000</strong>
             </div>
-
-            <!-- Interactive Slider Input -->
-            <div class="slider-track-wrapper">
-              <input type="range" id="input-money-slider" class="arcade-money-slider" min="0" max="100" step="5" value="50" aria-label="Investment allocation slider">
-              <div class="slider-ticks-row">
-                <span>0% (PASS)</span>
-                <span>25%</span>
-                <span>50%</span>
-                <span>75%</span>
-                <span>100% (ALL IN)</span>
-              </div>
-            </div>
-
-            <!-- Preset Fast Tap Buttons -->
-            <div class="slider-preset-chips">
-              <button type="button" class="btn-slider-preset" data-pct="0">0% PASS (SAFE)</button>
-              <button type="button" class="btn-slider-preset" data-pct="25">25%</button>
-              <button type="button" class="btn-slider-preset active" data-pct="50">50%</button>
-              <button type="button" class="btn-slider-preset" data-pct="75">75%</button>
-              <button type="button" class="btn-slider-preset chip-all-in" data-pct="100">🔥 100% ALL-IN</button>
-            </div>
-
-            <!-- Live Projection Math Simulator -->
-            <div class="math-projections-grid">
-              <div class="math-projection-col math-win-col">
-                <div class="proj-label-row">
-                  <span class="proj-icon">🟢</span>
-                  <span class="proj-label">IF DEAL WINS <span id="math-win-pct-tag">(+15%)</span></span>
-                </div>
-                <div class="proj-delta text-emerald" id="math-win-delta">+$7,500</div>
-                <div class="proj-total-row">
-                  <span class="proj-sub">New Balance:</span>
-                  <strong class="proj-total-val text-emerald" id="math-win-total">$107,500</strong>
-                </div>
-              </div>
-
-              <div class="math-projection-col math-loss-col">
-                <div class="proj-label-row">
-                  <span class="proj-icon">🔴</span>
-                  <span class="proj-label">IF DEAL FAILS <span id="math-fail-pct-tag">(-5%)</span></span>
-                </div>
-                <div class="proj-delta text-coral" id="math-loss-delta">-$2,500</div>
-                <div class="proj-total-row">
-                  <span class="proj-sub">New Balance:</span>
-                  <strong class="proj-total-val text-coral" id="math-loss-total">$97,500</strong>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Button -->
-            <div class="slider-action-wrapper">
-              <button type="button" id="btn-lock-slider-order" class="btn-lock-slider-order">
-                <span id="btn-lock-slider-text">⚡ CONFIRM & LOCK IN $50,000 (50%) ALLOCATION</span>
-              </button>
-            </div>
+            <button type="button" id="btn-lock-slider-order" class="btn-direct-lockin">
+              <span id="btn-lock-slider-text">⚡ LOCK IN THIS DEAL</span>
+            </button>
           </div>
         </div>
       </section>

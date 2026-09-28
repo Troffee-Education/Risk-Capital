@@ -257,7 +257,7 @@ function validateMode1CustomScenarios(data) {
   const startingCapital = Number(data.startingCapital) > 0 ? Number(data.startingCapital) : 100000;
   const targetCapital = Number(data.targetCapital) > startingCapital ? Number(data.targetCapital) : 500000;
   const maxRounds = Number(data.maxRounds) > 0 ? Number(data.maxRounds) : sanitizedRounds.length;
-  const timerSeconds = Number(data.timerSeconds) > 0 ? Number(data.timerSeconds) : 30;
+  const timerSeconds = Number(data.timerSeconds) > 0 ? Number(data.timerSeconds) : 80;
 
   return {
     valid: true,
@@ -350,7 +350,7 @@ function getScenarioPack(setNumber = 1) {
       startingCapital: 100000,
       targetCapital: 500000,
       maxRounds: 10,
-      timerSeconds: 40,
+      timerSeconds: 80,
       rounds: mode1Rounds
     };
   }
@@ -441,7 +441,7 @@ function getScenarioPack(setNumber = 1) {
     startingCapital: 100000,
     targetCapital: 500000,
     maxRounds: 10,
-    timerSeconds: 40,
+    timerSeconds: 80,
     rounds: setRounds
   };
 }
@@ -1207,7 +1207,7 @@ function resolveRound(roomCode) {
       { label: `Lower Mid (${formatCash(b1)}-${formatCash(b2)})`, count: 0, percentage: '0.0' },
       { label: `Mid Tier (${formatCash(b2)}-${formatCash(b3)})`, count: 0, percentage: '0.0' },
       { label: `Upper Mid (${formatCash(b3)}-${formatCash(targetGoal - 1)})`, count: 0, percentage: '0.0' },
-      { label: `Goal Reached (≥ ${formatCash(targetGoal)})`, count: 0, percentage: '0.0' }
+      { label: `Top Wealth (≥ ${formatCash(targetGoal)})`, count: 0, percentage: '0.0' }
     ];
 
     for (const p of playersList) {
@@ -1268,9 +1268,9 @@ function resolveRound(roomCode) {
       }
     }
 
-    const winners = playersList.filter(p => p.liquidCash >= targetGoal);
+    const winners = sortedPlayers.slice(0, 1);
     const maxRounds = room.maxRounds || (room.customScenarios?.rounds?.length) || 10;
-    const isGameOver = winners.length > 0 || room.roundIndex >= maxRounds;
+    const isGameOver = room.roundIndex >= maxRounds;
 
     const dramaFeed = [];
     for (const p of playersList) {
@@ -1882,6 +1882,24 @@ function resolveLiquidityBomb(roomCode) {
 // GAME PHASES / LIFECYCLE
 // -------------------------------------------------------------
 
+function advanceOrTriggerBomb(roomCode) {
+  const room = rooms.get(roomCode);
+  if (!room) return;
+  const maxRounds = room.mode === 'mode_1_sprint' ? (room.maxRounds || room.customScenarios?.rounds?.length || 10) : 15;
+  if (room.roundIndex >= maxRounds) {
+    finishGame(roomCode);
+    return;
+  }
+  // Auto-trigger Liquidity Bomb after Round 3 and after Round 7 if not already triggered for this round
+  if ((room.roundIndex === 3 || room.roundIndex === 7) && room.lastBombRound !== room.roundIndex) {
+    room.lastBombRound = room.roundIndex;
+    console.log(`[Auto-Trigger Minigame] Launching Liquidity Bomb after Round ${room.roundIndex} for Room ${roomCode}!`);
+    startLiquidityBomb(roomCode);
+    return;
+  }
+  startMarketIntelPhase(roomCode);
+}
+
 function startMarketIntelPhase(roomCode) {
   const room = rooms.get(roomCode);
   if (!room) return;
@@ -1958,7 +1976,7 @@ function openDecisionPhase(roomCode) {
   const isMode1 = room.mode === 'mode_1_sprint';
   const isFastTimers = process.env.TEST_FAST_TIMERS === 'true' || !!process.env.DECISION_DURATION;
   const customTimer = room.customScenarios?.timerSeconds ? room.customScenarios.timerSeconds * 1000 : null;
-  const defaultDuration = customTimer || (isMode1 ? 40000 : 25000);
+  const defaultDuration = customTimer || (isMode1 ? 80000 : 25000);
   const durationMs = isFastTimers ? Number(process.env.DECISION_DURATION || 300) : defaultDuration;
   room.timerEnd = Date.now() + durationMs;
   const maxRounds = isMode1 ? (room.maxRounds || room.customScenarios?.rounds?.length || 10) : 15;
@@ -2236,12 +2254,7 @@ io.on('connection', (socket) => {
       if (typeof callback === 'function') callback(resp);
       return;
     }
-    const maxRounds = room.mode === 'mode_1_sprint' ? (room.maxRounds || room.customScenarios?.rounds?.length || 10) : 15;
-    if (room.roundIndex >= maxRounds) {
-      finishGame(code);
-    } else {
-      startMarketIntelPhase(code);
-    }
+    advanceOrTriggerBomb(code);
     if (typeof callback === 'function') callback({ success: true });
   });
 
@@ -2253,12 +2266,7 @@ io.on('connection', (socket) => {
       if (typeof callback === 'function') callback(resp);
       return;
     }
-    const maxRounds = room.mode === 'mode_1_sprint' ? (room.maxRounds || room.customScenarios?.rounds?.length || 10) : 15;
-    if (room.roundIndex >= maxRounds) {
-      finishGame(code);
-    } else {
-      startMarketIntelPhase(code);
-    }
+    advanceOrTriggerBomb(code);
     if (typeof callback === 'function') callback({ success: true });
   });
 
@@ -2306,12 +2314,7 @@ io.on('connection', (socket) => {
       if (typeof callback === 'function') callback(resp);
       return;
     }
-    const maxRounds = room.mode === 'mode_1_sprint' ? (room.maxRounds || room.customScenarios?.rounds?.length || 10) : 15;
-    if (room.roundIndex >= maxRounds) {
-      finishGame(code);
-    } else {
-      startMarketIntelPhase(code);
-    }
+    advanceOrTriggerBomb(code);
     if (typeof callback === 'function') callback({ success: true });
   });
 
@@ -2344,6 +2347,7 @@ io.on('connection', (socket) => {
     room.roundOptions = null;
     room.timerEnd = null;
     room.lastResolutionStats = null;
+    room.lastBombRound = null;
     room.finishedAt = null;
     const startCash = room.startingCapital || 100000;
     for (const p of room.players.values()) {
