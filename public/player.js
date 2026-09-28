@@ -1298,6 +1298,7 @@
   pctButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       if (window.SoundManager) window.SoundManager.playButtonTap();
+      if (navigator.vibrate) navigator.vibrate(15);
       chosenAllocationPct = Number(btn.dataset.pct || 100);
       updateAllocationDisplay();
     });

@@ -5,8 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-all-suites.js",
-    "test:sim": "node test-simulation.js"
+    "test": "node tests/test-all-suites.js",
+    "test:sim": "node tests/test-simulation.js",
+    "test:frenzy": "node tests/test-cash-frenzy-minigame.js"
   },
   "engines": {
     "node": ">=18.0.0"

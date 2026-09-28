@@ -1,5 +1,5 @@
 // Post-Event Analysis and Reporting CLI for Risk Capital
-const { pool } = require('./db');
+const { pool } = require('../db');
 
 async function generateReport(sessionId) {
   console.log('================================================================');

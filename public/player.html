@@ -6,9 +6,9 @@
   <title>Risk Capital - Trader Controller</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="player.css?v=5">
-  <link rel="stylesheet" href="opportunity-card.css?v=1">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Paytone+One&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="player.css?v=6">
+  <link rel="stylesheet" href="opportunity-card.css?v=2">
   <link rel="stylesheet" href="player-pixel-theme.css?v=1">
 </head>
 <body class="player-body">
@@ -34,6 +34,7 @@
       
       <!-- Mode 1 Sprint Net Worth HUD Display -->
       <div id="hud-sprint-container" class="hud-sprint-container">
+        <img src="assets/images/coin-token.jpg" alt="Coin Token" class="hud-coin-img">
         <div class="hud-sprint-meta">
           <span class="hud-sprint-label">🏆 NET WORTH</span>
           <span id="hud-sprint-cash-text" class="hud-sprint-cash text-emerald">$100,000</span>
@@ -307,8 +308,11 @@
           <!-- Simple Compact Bottom Action Bar (Replaces bulky slider) -->
           <div id="simple-bottom-action-bar" class="simple-bottom-action-bar">
             <div class="bottom-cash-pill">
-              <span class="bottom-cash-label">INVESTING (<span id="bottom-invested-pct">100%</span>)</span>
-              <strong id="bottom-cash-amount" class="bottom-cash-val text-emerald">$100,000</strong>
+              <img src="assets/images/coin-token.jpg" alt="Coin Token" class="bottom-cash-token">
+              <div class="bottom-cash-meta">
+                <span class="bottom-cash-label">INVESTING (<span id="bottom-invested-pct">100%</span>)</span>
+                <strong id="bottom-cash-amount" class="bottom-cash-val text-emerald">$100,000</strong>
+              </div>
             </div>
             <button type="button" id="btn-lock-slider-order" class="btn-direct-lockin">
               <span id="btn-lock-slider-text">⚡ LOCK IN THIS DEAL</span>

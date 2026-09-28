@@ -10,9 +10,12 @@ const env = {
   SERVER_URL: `http://localhost:${PORT}`
 };
 
+const path = require('path');
+const rootDir = path.join(__dirname, '..');
+
 console.log(`Starting isolated test server on port ${PORT}...`);
 const serverProc = spawn('node', ['server.js'], {
-  cwd: __dirname,
+  cwd: rootDir,
   env,
   stdio: 'pipe'
 });

@@ -1,7 +1,7 @@
 // PostgreSQL Persistence & Crash Recovery Verification Test
 const assert = require('assert');
 const crypto = require('crypto');
-const db = require('./db');
+const db = require('../db');
 
 async function runPersistenceTest() {
   console.log('================================================================');

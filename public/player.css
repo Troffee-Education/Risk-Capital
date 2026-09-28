@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Paytone+One&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800;900&display=swap');
+
 :root {
   /* Neo-Brutalist Surfaces */
   --p-bg: #0c0f17;
@@ -32,6 +34,7 @@
   --p-text-dark: #0f172a;
 
   /* Typography */
+  --font-chunky: 'Fredoka', 'Paytone One', 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
@@ -143,7 +146,8 @@ body.player-body {
 }
 
 .hud-nickname {
-  font-size: 0.9rem;
+  font-family: var(--font-chunky);
+  font-size: 0.95rem;
   font-weight: 900;
   color: #fff;
   line-height: 1.1;
@@ -163,6 +167,50 @@ body.player-body {
   border-radius: 4px;
   border: 1px solid #000;
   width: fit-content;
+}
+
+/* Mode 1 Sprint Net Worth HUD Display */
+.hud-sprint-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--p-surface-low);
+  border: 2px solid #000;
+  border-radius: 10px;
+  padding: 4px 10px;
+  box-shadow: 0 3px 0 #000;
+}
+
+.hud-coin-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--p-gold);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.hud-sprint-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-sprint-label {
+  font-family: var(--font-chunky);
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: var(--p-gold);
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.hud-sprint-cash {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--p-emerald-light);
+  line-height: 1.1;
 }
 
 .hud-right {

@@ -14,8 +14,8 @@ let serverInstance;
 
 function startServer() {
   return new Promise((resolve) => {
-    delete require.cache[require.resolve('./server.js')];
-    const app = require('./server.js');
+    delete require.cache[require.resolve('../server.js')];
+    const app = require('../server.js');
     serverInstance = app.server || app;
     setTimeout(resolve, 500);
   });

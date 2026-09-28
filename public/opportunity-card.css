@@ -7,7 +7,7 @@
    Typography: Crisp, readable standard sans-serif (Plus Jakarta Sans & JetBrains Mono)
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&family=Paytone+One&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=JetBrains+Mono:wght@600;700;800;900&display=swap');
 
 :root {
   /* Deep Shadows — Charcoal & Dark Leather */
@@ -43,7 +43,8 @@
   --risk-high-glow: rgba(239, 68, 68, 0.45);
   --risk-high-neon: #f87171;
 
-  /* Clear Standard Typography */
+  /* Playful Party & Standard Typography */
+  --qc-font-chunky: 'Fredoka', 'Paytone One', 'Plus Jakarta Sans', system-ui, sans-serif;
   --qc-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --qc-font-mono: 'JetBrains Mono', monospace;
 }
@@ -276,19 +277,19 @@
   gap: 10px;
 }
 
-/* Deal Selector Tabs (3 Options) */
+/* Deal Selector Tabs (3 Options) - Chunky 3D Arcade Switcher */
 .deal-selector-tabs {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   max-width: 480px;
-  padding: 5px;
-  background: #0c0914;
-  border: 2px solid #2d2438;
-  border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+  padding: 6px;
+  background: #090d16;
+  border: 3px solid #000000;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #000000, inset 0 2px 4px rgba(0, 0, 0, 0.8);
   box-sizing: border-box;
 }
 
@@ -299,42 +300,63 @@
   justify-content: center;
   gap: 6px;
   padding: 8px 6px;
-  background: #191424;
-  border: 1px solid #3d304a;
-  border-radius: 6px;
-  color: #a89bb6;
-  font-family: var(--qc-font-sans);
+  background: #141c2e;
+  border: 2px solid #000000;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-family: var(--qc-font-chunky, 'Fredoka', sans-serif);
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  position: relative;
+  box-shadow: 0 3px 0 #000000;
+  transition: transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.08s ease, background 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .deal-tab-btn:hover {
-  background: #261f36;
-  color: #fff;
+  background: #1e2942;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #000000;
+}
+
+.deal-tab-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #000000;
 }
 
 .deal-tab-btn.active[data-idx="0"] {
-  background: #064e3b;
-  border-color: #10b981;
-  color: #a7f3d0;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 3px 0 #022c22, 0 0 12px rgba(16, 185, 129, 0.6);
+  transform: translateY(-2px) scale(1.02);
+  z-index: 2;
 }
 
 .deal-tab-btn.active[data-idx="1"] {
-  background: #78350f;
-  border-color: #f59e0b;
-  color: #fde68a;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  color: #000000;
+  border-color: #000000;
+  box-shadow: 0 3px 0 #451a03, 0 0 12px rgba(245, 158, 11, 0.6);
+  transform: translateY(-2px) scale(1.02);
+  z-index: 2;
 }
 
 .deal-tab-btn.active[data-idx="2"] {
-  background: #7f1d1d;
-  border-color: #ef4444;
-  color: #fecaca;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
+  background: linear-gradient(180deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 3px 0 #4c0519, 0 0 12px rgba(244, 63, 94, 0.6);
+  transform: translateY(-2px) scale(1.02);
+  z-index: 2;
+}
+
+.deal-tab-btn.active:active {
+  transform: translateY(2px) scale(1);
 }
 
 .deal-tab-icon {
@@ -622,7 +644,7 @@
 }
 
 /* ============================================================
-   SIMPLE COMPACT BOTTOM ACTION BAR (REPLACES BULKY SLIDER)
+   CHUNKY 3D TACTILE BOTTOM ACTION BAR (JACKBOX CONTROLLER FEEL)
    ============================================================ */
 .simple-bottom-action-bar {
   width: 100%;
@@ -631,27 +653,51 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  background: #0d111a;
-  border: 2px solid #232936;
-  border-radius: 10px;
+  gap: 10px;
+  background: #0f1422;
+  border: 3px solid #000000;
+  border-radius: 14px;
   padding: 8px 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 6px 0 #000000, 0 10px 24px rgba(0, 0, 0, 0.7);
   box-sizing: border-box;
+  position: relative;
 }
 
 .bottom-cash-pill {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #080c14;
+  border: 2px solid #1e293b;
+  border-radius: 10px;
+  padding: 6px 10px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  min-width: 110px;
+}
+
+.bottom-cash-token {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+  object-fit: cover;
+  flex-shrink: 0;
+  animation: coinGlowPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes coinGlowPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #f59e0b); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 10px #fbbf24); }
+}
+
+.bottom-cash-meta {
+  display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  background: #080b11;
-  border: 1px solid #1f293d;
-  border-radius: 6px;
-  padding: 5px 10px;
-  min-width: 105px;
 }
 
 .bottom-cash-label {
+  font-family: var(--qc-font-chunky, 'Fredoka', sans-serif);
   font-size: 9px;
   font-weight: 800;
   color: #94a3b8;
@@ -662,51 +708,60 @@
 }
 
 .bottom-cash-val {
-  font-family: var(--qc-font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--qc-font-mono, monospace);
   font-size: 16px;
   font-weight: 900;
   color: #10b981;
   line-height: 1;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
+/* 3D Chunky Push-Down Lock-In Button */
 .btn-direct-lockin {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 40%, #059669 100%);
   color: #ffffff;
-  border: none;
-  border-radius: 8px;
+  border: 3px solid #000000;
+  border-radius: 12px;
   padding: 12px 14px;
-  font-family: var(--qc-font-sans, 'Plus Jakarta Sans', sans-serif);
-  font-size: 13px;
+  font-family: var(--qc-font-chunky, 'Fredoka', 'Paytone One', sans-serif);
+  font-size: 14px;
   font-weight: 900;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4), 0 3px 6px rgba(0, 0, 0, 0.4);
-  transition: all 0.15s ease;
+  position: relative;
+  box-shadow: 0 5px 0 #022c22, 0 8px 16px rgba(0, 0, 0, 0.6);
+  transition: transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.08s ease, filter 0.1s ease;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .btn-direct-lockin:hover:not(:disabled) {
+  filter: brightness(1.08);
   transform: translateY(-2px);
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.6), 0 5px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 7px 0 #022c22, 0 12px 20px rgba(16, 185, 129, 0.4);
 }
 
 .btn-direct-lockin:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #022c22, 0 3px 6px rgba(0, 0, 0, 0.4);
 }
 
 .btn-direct-lockin:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(80%);
+  box-shadow: 0 3px 0 #1e293b;
+  transform: none;
 }
 
 /* ============================================================
-   SMALL SLEEK PERCENTAGE BAR (INVESTMENT SIZE)
+   CHUNKY 3D TACTILE PERCENTAGE CONTROLLER BAR (25%, 50%, 75%, ALL-IN)
    ============================================================ */
 .percentage-selector-bar {
   display: flex;
@@ -714,60 +769,79 @@
   justify-content: space-between;
   width: 100%;
   max-width: 480px;
-  margin: 8px auto 0 auto;
-  padding: 4px 8px;
-  background: #080b12;
-  border: 1px solid #1f293d;
-  border-radius: 8px;
+  margin: 10px auto 0 auto;
+  padding: 6px 10px;
+  background: #090d16;
+  border: 3px solid #000000;
+  border-radius: 14px;
+  box-shadow: 0 5px 0 #000000, 0 8px 18px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
 }
 
 .pct-bar-label {
-  font-family: var(--qc-font-sans, 'Plus Jakarta Sans', sans-serif);
-  font-size: 10px;
+  font-family: var(--qc-font-chunky, 'Fredoka', sans-serif);
+  font-size: 11px;
   font-weight: 800;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
+  color: #fbbf24;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
-  margin-right: 6px;
+  margin-right: 8px;
   white-space: nowrap;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
 }
 
 .pct-btn-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   justify-content: flex-end;
 }
 
 .btn-pct-chip {
   flex: 1;
-  padding: 6px 4px;
-  background: #141a29;
-  color: #94a3b8;
-  border: 1px solid #232f48;
-  border-radius: 6px;
-  font-family: var(--qc-font-mono, monospace);
-  font-size: 11px;
-  font-weight: 800;
+  padding: 8px 4px;
+  background: #141c2e;
+  color: #cbd5e1;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  font-family: var(--qc-font-chunky, 'Fredoka', 'JetBrains Mono', monospace);
+  font-size: 12px;
+  font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s ease;
+  position: relative;
+  box-shadow: 0 3px 0 #000000;
+  transition: transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.08s ease, background 0.12s ease;
   text-align: center;
   white-space: nowrap;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .btn-pct-chip:hover {
-  background: #1e293b;
-  color: #f1f5f9;
-  border-color: #3b82f6;
+  background: #1e2942;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #000000;
+}
+
+.btn-pct-chip:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #000000;
 }
 
 .btn-pct-chip.active {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(180deg, #34d399 0%, #10b981 50%, #059669 100%);
   color: #ffffff;
-  border-color: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
+  border-color: #000000;
+  box-shadow: 0 3px 0 #022c22, 0 0 14px rgba(16, 185, 129, 0.65);
+  transform: translateY(-2px) scale(1.04);
+  z-index: 2;
+}
+
+.btn-pct-chip.active:active {
+  transform: translateY(2px) scale(1);
+  box-shadow: 0 1px 0 #022c22;
 }
 
 /* =============================================================
